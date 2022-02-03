@@ -1,37 +1,10 @@
-// these are the variables you can use as inputs to your algorithms
-console.log(fxhash)   // the 64 chars hex number fed to your algorithm
-console.log(fxrand()) // deterministic PRNG function, use it instead of Math.random()
-
-// note about the fxrand() function 
-// when the "fxhash" is always the same, it will generate the same sequence of
-// pseudo random numbers, always
-
-//----------------------
-// defining features
-//----------------------
-// You can define some token features by populating the $fxhashFeatures property
-// of the window object.
-// More about it in the guide, section features:
-// [https://fxhash.xyz/articles/guide-mint-generative-token#features]
-//
-// window.$fxhashFeatures = {
-//   "Background": "Black",
-//   "Number of lines": 10,
-//   "Inverted": true
-// }
-
-// this code writes the values to the DOM as an example
-//const container = document.createElement("div")
-//container.innerText = `
-//  random hash: ${fxhash}\n
-//  some pseudo random values: [ ${fxrand()}, ${fxrand()}, ${fxrand()}, ${fxrand()}, ${fxrand()},... ]\n
-//`
-//document.body.prepend(container)
-
-//let WIDTH = 1000;
-//let HEIGHT = 1000;
-
-console.log('-----')
+/* warpGrid generative art by @d_ho__ / @d_ho__codes
+ * built using p5.js 
+ * intial development Nov 2021, developed for fxhash Jan / Feb 2022
+ * insta: @d_ho__codes
+ * questions or comments? twitter: @d_ho__
+ * for original minters only - if you're not satisfied with the output, DM me and I'll buy it off you for the original mint price
+ */
 
 let colorPalettes = {
     autumnRust: ["#242625", "#add1f7", "#616a59", "#8e5e48", "#c77c00", "#bf9481", "#dda734", "#f2bd45"],
@@ -70,24 +43,26 @@ let g_blur;
 let g_final;
 
 
-//features to use
-
+//randomization of features
+let feat_paletteName = paletteNames[Math.floor(fxrand() * paletteNames.length)];
+let feat_palette = colorPalettes[feat_paletteName];
 let feat_rounded = fxrand() > 0.25 ? true: false;
 let feat_oversized = fxrand() > 0.85 ? true: false;
 let feat_inset = fxrand() > 0.5 ? true : false;
 let feat_stroke = fxrand() > 0.75 ? true : false;
-if (feat_oversized) {
-    feat_stroke = false;
-}
-//let feat_blur = fxrand() > 0.5 ? true : false;
-let feat_blur = false;
+let feat_blur = fxrand() > 0.5 ? true : false;
 let feat_border = fxrand() > 0.25 ? true : false;
 let feat_borderSize = 25;
 let feat_fullBleed = 1;
-let feat_bg = fxrand() > 0.5 ? "light" : "dark";
+let feat_bg = fxrand() > 0.65 ? "light" : "dark";
 let feat_useTexture = fxrand() > 0.33;
-//let feat_useTexture = false;
 let feat_texture;
+
+if (feat_oversized) {
+    feat_stroke = false;
+    feat_blur = false;
+}
+
 if (feat_useTexture) {
     feat_texture = textures[Math.floor(fxrand() * textures.length)]
 }
@@ -99,23 +74,13 @@ if (feat_border) {
 
 //end features
 
-//let size = Math.min(window.innerWidth, window.innerHeight) - feat_borderSize;
-let size = 1200;
-let cnvSize = 1250;
+//canvas and additional variables
+let numColors = feat_palette.length;
+
+let size = Math.min(window.innerWidth, window.innerHeight) - feat_borderSize;
+let cnvSize = size + feat_borderSize;
 let gridRand = fxrand();
 let gridSize;
-let numPalettes = paletteNames.length;
-let colRand = fxrand()
-let paletteIndex = Math.floor(colRand * numPalettes);
-
-/*console.log("rand * numPalettes: " + colRand * numPalettes);
-console.log("math.floor above: " + Math.floor(colRand * numPalettes));
-console.log("paletteIndex: " + paletteIndex);
-console.log("palette Name: "+ paletteNames[paletteIndex]);*/
-
-let palette = colorPalettes[paletteNames[paletteIndex]];
-//console.log(palette);
-let numColors = palette.length;
 
 let RECTSIZE;
 
@@ -242,15 +207,14 @@ function setup() {
     RECTSIZE = Math.floor(size / gridSize);
     cnv = createCanvas(cnvSize, cnvSize);
     background(bgcolor);
-    rect(feat_borderSize / 2, feat_borderSize / 2, size, size);
+
+    //!!!!!!------DEBUGGING REFERENCE RECTANGLE------!!!!!!
+    //rect(feat_borderSize / 2, feat_borderSize / 2, size, size);
 
     strokeGraphics = createGraphics(size + feat_borderSize, size + feat_borderSize);
     shapeGraphics = createGraphics(size + feat_borderSize, size + feat_borderSize);
     //colorMode(HSB, 1, 100, 100);
 
-
-    //scaleSlide = createSlider(20, 2000, 200, 20);
-    //scaleSlide.style('width', '500px');
     seed = (fxrand() * 1213) + (fxrand() * 7753)
     noiseSeed(seed);
     console.log("seed = " + seed)
@@ -328,23 +292,6 @@ function draw() {
     colorMode(RGB);
     console.log("bg color: " + bgcolor);
 
-/*    for (x = 0; x < width; x++) {
-        for (y = 0; y < height; y++) {
-            if (fxrand() < 0.3) {
-                let sample = get(x, y);
-                //console.log(sample);
-                if (sample[0] != 10) {
-                    let opacity = (fxrand() * 100);
-                    let lightness = (fxrand() * 100) + 100;
-                    let dotColor = color(lightness, opacity)
-                    stroke(dotColor);
-                    //filterGraphics.point(x, y);
-                    point(x, y);
-                }
-
-            }
-        }
-    }*/
 
     //filterGraphics.filter(BLUR, 1);
     //image(filterGraphics, 0, 0);
@@ -363,10 +310,31 @@ function draw() {
     g_shapes_all.blend(g_shapes_2, 0, 0, cnvSize, cnvSize, 0, 0, cnvSize, cnvSize, NORMAL);
     g_shapes_all.blend(g_shapes_3, 0, 0, cnvSize, cnvSize, 0, 0, cnvSize, cnvSize, NORMAL);
 
-    (g_masked_texture = g_texture.get()).mask(g_shapes_all);
+    g_texture.clear()
+    for (x = 0; x < width; x++) {
+        for (y = 0; y < height; y++) {
+            if (fxrand() < 0.8) {
+                let sample = g_shapes_all.get(x, y);
+                //console.log(sample);
+                if (sample[3] != 0) {
+                    let sampleColor = color(sample);
+                    let opacity = fxrand() * 255;
+                    sampleColor.setAlpha(opacity);
+                    let dotSize = fxrand() * 3;
+                    g_texture.stroke(sampleColor);
+                    g_texture.strokeWeight(dotSize);                   
+                    //filterGraphics.point(x, y);
+                    g_texture.point(x, y);
+                }
 
-    g_final.blend(g_shapes_all, 0, 0, cnvSize, cnvSize, 0, 0, cnvSize, cnvSize, NORMAL);
-    g_final.blend(g_masked_texture, 0, 0, cnvSize, cnvSize, 0, 0, cnvSize, cnvSize, OVERLAY);
+            }
+        }
+    }
+
+    //(g_masked_texture = g_texture.get()).mask(g_shapes_all);
+
+    //g_final.blend(g_shapes_all, 0, 0, cnvSize, cnvSize, 0, 0, cnvSize, cnvSize, NORMAL);
+    //g_final.blend(g_masked_texture, 0, 0, cnvSize, cnvSize, 0, 0, cnvSize, cnvSize, OVERLAY);
 
     //image(g_shapes_all, 0, 0);
 
@@ -380,7 +348,9 @@ function draw() {
 
    // g_texture.ellipse(500, 500, 500);
     //tint(255, 125);
-    image(g_final, 0, 0);
+    //image(g_final, 0, 0);
+
+    image(g_texture, 0, 0);
 
     dirField.zOff += 2;
     magField.zOff += 2;

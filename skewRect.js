@@ -112,39 +112,39 @@ class SkewRect {
         if (colValue < colorFieldMin) { colValue = colorFieldMin };
         if (colValue > colorFieldMax) { colValue = colorFieldMax };
         //let colIndex = Math.floor(colValue * numColors)
-        let colIndexRaw = map(colValue, colorFieldMin, colorFieldMax, 0, palette.length - 1);
+        let colIndexRaw = map(colValue, colorFieldMin, colorFieldMax, 0, feat_palette.length - 1);
         let colIndex = Math.floor(colIndexRaw);
         //if (fxrand() > 0.3 && !randoColor) {
         //    if (colIndexRaw % 1 < 0.15 && colIndexRaw > 1) {
         //        colIndex -= 1
-        //    } else if (colIndexRaw % 1 > 0.85 && colIndexRaw < palette.length-1) {
+        //    } else if (colIndexRaw % 1 > 0.85 && colIndexRaw < feat_palette.length-1) {
         //        colIndex += 1
         //    }
         //}
         let colorLerped = false;
         if (fxrand() > 0.3 && !randoColor) {
             if (colIndexRaw % 1 < 0.15 && colIndexRaw > 1) {
-                let c1 = color(palette[colIndex]);
-                let c2 = color(palette[colIndex - 1]);
+                let c1 = color(feat_palette[colIndex]);
+                let c2 = color(feat_palette[colIndex - 1]);
                 let lpc = lerpColor(c1, c2, 0.5);
                 this.color = lpc;
                 colorLerped = true;
-            } else if (colIndexRaw % 1 > 0.85 && colIndexRaw < palette.length - 1) {
-                let c1 = color(palette[colIndex]);
-                let c2 = color(palette[colIndex + 1]);
+            } else if (colIndexRaw % 1 > 0.85 && colIndexRaw < feat_palette.length - 1) {
+                let c1 = color(feat_palette[colIndex]);
+                let c2 = color(feat_palette[colIndex + 1]);
                 let lpc = lerpColor(c1, c2, 0.5);
                 this.color = lpc;
                 colorLerped = true;
             }
         }
         if (!colorLerped) {
-            this.color = color(palette[colIndex])
+            this.color = color(feat_palette[colIndex])
         };
 
         //console.log(colValue);
         //console.log(colIndex);
-        //console.log(palette[colIndex]);
-        //console.log("assign: "+ color(palette[colIndex]));
+        //console.log(feat_palette[colIndex]);
+        //console.log("assign: "+ color(feat_palette[colIndex]));
         //console.log(this.color);
     }
   }
