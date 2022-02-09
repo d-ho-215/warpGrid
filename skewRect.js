@@ -1,6 +1,12 @@
+/* warpGrid: generative art by @d_ho__ / @d_ho__codes
+ * built using p5.js
+ * intial development Nov 2021, developed for fxhash Jan / Feb 2022
+ * NFT 2.0 license
+ */
+
 class SkewRect {
     constructor(center, nomSize, subDepth = 0) {
-        this.center = center; //vector position
+        this.center = center; //vector positions, generally
         this.nomSize = nomSize;
         this.half = nomSize/2;
         this.magFactor = 4;
@@ -23,7 +29,7 @@ class SkewRect {
         this.magField = null;
         this.colorField = null;
         this.subDivField = null;
-        this.insetAmt = 8;
+        this.insetAmt = 0.006667;
         this.g_shapes = null;
         this.g_stroke = null;
   }
@@ -34,37 +40,48 @@ class SkewRect {
         this.colorField = colorField;
         this.subDivField = subDivField;
   }
-  
-  subdivide() {
-    if (this.subDepth < 3) {
-      let subValue = this.subDivField.value(this.center.x, this.center.y, 0)
-      if (subValue >= 0.45 && subValue < 0.7) {
-        // console.log('sub2');
-        this.color = color("red");
-        this.sub2();
-        this.divided = true;
-      }
-      if (subValue >= 0.7)  {
-        // console.log('sub3');
-        this.color = color("blue");
-        this.sub3();
-        this.divided = true;
-      }
-      for (let rect of this.subRects) {
-        rect.subdivide();
-      }
+
+    subdivide() {
+        if (this.subDepth < 3) {
+            let debugDepth;
+            switch (this.subDepth) {
+                case 0:
+                    debugDepth = subdivisionStats.L0
+                    break;
+                case 1:
+                    debugDepth = subdivisionStats.L1
+                    break;
+                case 2:
+                    debugDepth = subdivisionStats.L2
+                    break;
+                case 3:
+                    debugDepth = subdivisionStats.L3
+                    break;
+                case 4:
+                    debugDepth = subdivisionStats.L4
+                    break;
+            }
+            let addFactor = this.subDepth * 0.05
+            let subValue = this.subDivField.value(this.center.x, this.center.y, 0) - addFactor
+            if (subValue >= 0.45 && subValue < 0.55) {
+                this.sub2();
+                this.divided = true;
+                debugDepth.sub2 += 1;
+            }
+            if (subValue >= 0.55) {
+                this.sub3();
+                this.divided = true;
+                debugDepth.sub3 += 1;
+            }
+            for (let rect of this.subRects) {
+                rect.subdivide();
+            }
+        }
     }
-    
-    //for (let rect of subRects) {
-    //  rect.subdivide();
-    //}
-  }
   
   sub2() {
-    // console.log("sub2 called");
     for (let i = -1; i < 2; i+=2) {
       for (let j = -1; j < 2; j+=2) {
-        //console.log(i,j)
         let newSize = this.nomSize/2
         let quarterSize = this.nomSize/4
         let newCenter = this.center.copy().add(i*quarterSize,j*quarterSize);
@@ -76,10 +93,8 @@ class SkewRect {
   }
   
   sub3() {
-    // console.log("sub3 called")
     for (let i = -1; i < 2; i++) {
       for (let j = -1; j < 2; j++) {
-        //console.log(i,j)
         let newSize = this.nomSize/3
         let newCenter = this.center.copy().add(i*newSize,j*newSize);
         let sub = new SkewRect(newCenter, newSize, this.subDepth + 1);
@@ -91,8 +106,7 @@ class SkewRect {
   
   getCornerVector(pt) {
     return createVector(1,1,0)
-      // .setMag(this.magField.value(pt.x, pt.y,0) * this.nomSize/this.magFactor)
-      .setMag(this.magField.value(pt.x, pt.y,0) * MAXWARP)
+      .setMag(this.magField.value(pt.x, pt.y,0) * maxWarp)
       .setHeading(this.dirField.dir(pt.x, pt.y,0));
   }
   
@@ -102,7 +116,6 @@ class SkewRect {
         rect.setColor();        
       }
     } else {
-        //let colAngle = this.colorField.value(this.center.x, this.center.y, 0) * PI - 0.4 // value from 0 to 1
         let colValue = this.colorField.value(this.center.x, this.center.y, 0); // value from 0 to 1
         let randoColor = false;
         if (fxrand() > 0.9) {
@@ -111,16 +124,8 @@ class SkewRect {
         }
         if (colValue < colorFieldMin) { colValue = colorFieldMin };
         if (colValue > colorFieldMax) { colValue = colorFieldMax };
-        //let colIndex = Math.floor(colValue * numColors)
         let colIndexRaw = map(colValue, colorFieldMin, colorFieldMax, 0, feat_palette.length - 1);
         let colIndex = Math.floor(colIndexRaw);
-        //if (fxrand() > 0.3 && !randoColor) {
-        //    if (colIndexRaw % 1 < 0.15 && colIndexRaw > 1) {
-        //        colIndex -= 1
-        //    } else if (colIndexRaw % 1 > 0.85 && colIndexRaw < feat_palette.length-1) {
-        //        colIndex += 1
-        //    }
-        //}
         let colorLerped = false;
         if (fxrand() > 0.3 && !randoColor) {
             if (colIndexRaw % 1 < 0.15 && colIndexRaw > 1) {
@@ -140,12 +145,6 @@ class SkewRect {
         if (!colorLerped) {
             this.color = color(feat_palette[colIndex])
         };
-
-        //console.log(colValue);
-        //console.log(colIndex);
-        //console.log(feat_palette[colIndex]);
-        //console.log("assign: "+ color(feat_palette[colIndex]));
-        //console.log(this.color);
     }
   }
   
@@ -168,7 +167,7 @@ class SkewRect {
       if (feat_inset) {
           this.cp.add(this.p1).add(this.p2).add(this.p3).add(this.p4).div(4);
 
-          let subDepthInset = this.insetAmt - (this.subDepth * 2.25);
+          let subDepthInset = this.insetAmt - (this.subDepth * 0.001875);
           if (feat_oversized) { subDepthInset = -subDepthInset };
           let p1inset = p5.Vector.sub(this.cp, this.p1).setMag(subDepthInset);
           let p2inset = p5.Vector.sub(this.cp, this.p2).setMag(subDepthInset);
@@ -203,30 +202,40 @@ class SkewRect {
         }
         this.g_shapes.noStroke();
         this.g_stroke.noFill();
-        if (feat_stroke) {
-            if (feat_bg == "light") {
-                this.g_stroke.stroke(0, 128);
-            } else {
-                this.g_stroke.stroke(255, 128);
-            }
 
-            if (this.subDepth < 2) {
-                this.g_stroke.strokeWeight(2);
-            } else if (this.subDepth < 3) {
-                this.g_stroke.strokeWeight(1.5);
-            } else {
-                this.g_stroke.strokeWeight(0.75);
-            }
+        if (feat_bg == "light") {
+            this.g_stroke.stroke(0, 200);
         } else {
-            this.g_stroke.noStroke();
+            this.g_stroke.stroke(255, 200);
         }
 
-        if (feat_stroke && feat_blur && this.subDepth >= 3) {
-            this.g_stroke.strokeWeight(0);
+        if (this.subDepth < 2) {
+            this.g_stroke.strokeWeight(2);
+        } else if (this.subDepth < 3) {
+            this.g_stroke.strokeWeight(1.5);
+        } else {
+            this.g_stroke.strokeWeight(0.75);
+        } 
+
+        if (this.subDepth == 2) {
+        //if (feat_blur && this.subDepth == 2) {
+            //this.g_stroke.strokeWeight(0);
+            if (feat_bg == "light") {
+                this.g_stroke.stroke(0, 140)
+            } else {
+                this.g_stroke.stroke(255, 120)
+            }
+        } else if (this.subDepth >= 3) {
+        //} else if (feat_blur && this.subDepth >= 3) {
+            //this.g_stroke.strokeWeight(0);
+            if (feat_bg == "light") {
+                this.g_stroke.stroke(0, 60)
+            } else {
+                this.g_stroke.stroke(255, 40)
+            }
         }
         
     if (this.divided) {
-      // console.log("divided")
       for (let rect of this.subRects) {
         rect.setCorners();
         rect.show();
@@ -241,54 +250,47 @@ class SkewRect {
       }
 
         if (feat_rounded) {
-            let p1a = p5.Vector.lerp(this.p1, this.p2, lerpAmt)
+            let p1a = p5.Vector.lerp(this.p1, this.p2, feat_lerpAmt)
             let p1b = p5.Vector.lerp(this.p1, this.p2, 0.5)
-            let p1c = p5.Vector.lerp(this.p1, this.p2, 1 - lerpAmt)
-            let p2a = p5.Vector.lerp(this.p2, this.p3, lerpAmt)
+            let p1c = p5.Vector.lerp(this.p1, this.p2, 1 - feat_lerpAmt)
+            let p2a = p5.Vector.lerp(this.p2, this.p3, feat_lerpAmt)
             let p2b = p5.Vector.lerp(this.p2, this.p3, 0.5)
-            let p2c = p5.Vector.lerp(this.p2, this.p3, 1 - lerpAmt)
-            let p3a = p5.Vector.lerp(this.p3, this.p4, lerpAmt)
+            let p2c = p5.Vector.lerp(this.p2, this.p3, 1 - feat_lerpAmt)
+            let p3a = p5.Vector.lerp(this.p3, this.p4, feat_lerpAmt)
             let p3b = p5.Vector.lerp(this.p3, this.p4, 0.5)
-            let p3c = p5.Vector.lerp(this.p3, this.p4, 1 - lerpAmt)
-            let p4a = p5.Vector.lerp(this.p4, this.p1, lerpAmt)
+            let p3c = p5.Vector.lerp(this.p3, this.p4, 1 - feat_lerpAmt)
+            let p4a = p5.Vector.lerp(this.p4, this.p1, feat_lerpAmt)
             let p4b = p5.Vector.lerp(this.p4, this.p1, 0.5)
-            let p4c = p5.Vector.lerp(this.p4, this.p1, 1 - lerpAmt)
+            let p4c = p5.Vector.lerp(this.p4, this.p1, 1 - feat_lerpAmt)
 
             this.g_shapes.beginShape();
-            vertex(p1b.x, p1b.y)
-            bezierVertex(p1c.x, p1c.y, p2a.x, p2a.y, p2b.x, p2b.y)
-            bezierVertex(p2c.x, p2c.y, p3a.x, p3a.y, p3b.x, p3b.y)
-            bezierVertex(p3c.x, p3c.y, p4a.x, p4a.y, p4b.x, p4b.y)
-            bezierVertex(p4c.x, p4c.y, p1a.x, p1a.y, p1b.x, p1b.y)
+            vertex(p1b.x * size, p1b.y * size)
+            bezierVertex(p1c.x * size, p1c.y * size, p2a.x * size, p2a.y * size, p2b.x * size, p2b.y * size)
+            bezierVertex(p2c.x * size, p2c.y * size, p3a.x * size, p3a.y * size, p3b.x * size, p3b.y * size)
+            bezierVertex(p3c.x * size, p3c.y * size, p4a.x * size, p4a.y * size, p4b.x * size, p4b.y * size)
+            bezierVertex(p4c.x * size, p4c.y * size, p1a.x * size, p1a.y * size, p1b.x * size, p1b.y * size)
             this.g_shapes.endShape();
 
             this.g_stroke.beginShape();
-            vertex(p1b.x, p1b.y)
-            bezierVertex(p1c.x, p1c.y, p2a.x, p2a.y, p2b.x, p2b.y)
-            bezierVertex(p2c.x, p2c.y, p3a.x, p3a.y, p3b.x, p3b.y)
-            bezierVertex(p3c.x, p3c.y, p4a.x, p4a.y, p4b.x, p4b.y)
-            bezierVertex(p4c.x, p4c.y, p1a.x, p1a.y, p1b.x, p1b.y)
+            vertex(p1b.x * size, p1b.y * size)
+            bezierVertex(p1c.x * size, p1c.y * size, p2a.x * size, p2a.y * size, p2b.x * size, p2b.y * size)
+            bezierVertex(p2c.x * size, p2c.y * size, p3a.x * size, p3a.y * size, p3b.x * size, p3b.y * size)
+            bezierVertex(p3c.x * size, p3c.y * size, p4a.x * size, p4a.y * size, p4b.x * size, p4b.y * size)
+            bezierVertex(p4c.x * size, p4c.y * size, p1a.x * size, p1a.y * size, p1b.x * size, p1b.y * size)
             this.g_stroke.endShape();
 
         } else {
             this.g_stroke.beginShape();
             this.g_shapes.beginShape();
-            vertex(this.p1.x, this.p1.y);
-            vertex(this.p2.x, this.p2.y);
-            vertex(this.p3.x, this.p3.y);
-            vertex(this.p4.x, this.p4.y);
+            vertex(this.p1.x * size, this.p1.y * size);
+            vertex(this.p2.x * size, this.p2.y * size);
+            vertex(this.p3.x * size, this.p3.y * size);
+            vertex(this.p4.x * size, this.p4.y * size);
             this.g_shapes.endShape(CLOSE);
             this.g_stroke.endShape(CLOSE);
         }
-      // ellipse(this.nP1.x, this.nP1.y,2);
-      // ellipse(this.nP2.x, this.nP2.y,2);
-      // ellipse(this.nP3.x, this.nP3.y,2);
-      // ellipse(this.nP4.x, this.nP4.y,2);
+
         noFill();
-/*        strokeWeight(1);
-        stroke("black");
-        ellipse(this.cp.x, this.cp.y, 10, 10);
-        noStroke();*/
 
     }
 
