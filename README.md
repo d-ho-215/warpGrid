@@ -3,3 +3,5 @@
 ### using perlin noise fields to warp, subdivide, and color the plane
 
 See [warpGrid on fxhash](https://www.fxhash.xyz/generative/8978) to see all iterations minted so far.
+
+Github Pages hosted version[d-ho-215.github.io/warpGrid/](https://d-ho-215.github.io/warpGrid/)
